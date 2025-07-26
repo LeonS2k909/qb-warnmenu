@@ -21,3 +21,24 @@ RegisterCommand('warnings', function(source)
         TriggerClientEvent('qb-warnings:client:ShowWarnings', src, results)
     end)
 end)
+
+RegisterCommand('delwarning', function(source, args)
+    local src = source
+    if src == 0 then return end
+
+    -- Basic ace permission check. `command` is granted to admins in server.cfg
+    if not IsPlayerAceAllowed(src, 'command') then
+        TriggerClientEvent('QBCore:Notify', src, 'No permission to run this command.', 'error')
+        return
+    end
+
+    local warnId = tonumber(args[1])
+    if not warnId then
+        TriggerClientEvent('QBCore:Notify', src, 'You must provide a warning ID.', 'error')
+        return
+    end
+
+    exports.oxmysql:execute('DELETE FROM player_warns WHERE warnId = ?', { warnId }, function()
+        TriggerClientEvent('QBCore:Notify', src, 'Warning deleted.', 'success')
+    end)
+end, false)
