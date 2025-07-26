@@ -1,9 +1,9 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
-RegisterCommand('warnings', function(source)
+RegisterNetEvent('qb-warnings:server:RequestWarnings', function()
     local src = source
-
     local license = nil
+
     for _, id in ipairs(GetPlayerIdentifiers(src)) do
         if id:find("license:") then
             license = id
@@ -11,9 +11,7 @@ RegisterCommand('warnings', function(source)
         end
     end
 
-    if not license then
-        return
-    end
+    if not license then return end
 
     exports.oxmysql:execute('SELECT reason, senderIdentifier, warnId FROM player_warns WHERE targetIdentifier = ?', {
         license
@@ -22,23 +20,18 @@ RegisterCommand('warnings', function(source)
     end)
 end)
 
-RegisterCommand('delwarning', function(source, args)
+RegisterNetEvent('qb-warnings:server:DeleteWarning', function(warnId)
     local src = source
-    if src == 0 then return end
 
-    -- Basic ace permission check. `command` is granted to admins in server.cfg
-    if not IsPlayerAceAllowed(src, 'command') then
-        TriggerClientEvent('QBCore:Notify', src, 'No permission to run this command.', 'error')
+    -- ACE permission check
+    if not IsPlayerAceAllowed(src, "command") then
+        TriggerClientEvent('qb-warnings:client:NotifyDeleted', src, false)
         return
     end
 
-    local warnId = tonumber(args[1])
-    if not warnId then
-        TriggerClientEvent('QBCore:Notify', src, 'You must provide a warning ID.', 'error')
-        return
-    end
-
-    exports.oxmysql:execute('DELETE FROM player_warns WHERE warnId = ?', { warnId }, function()
-        TriggerClientEvent('QBCore:Notify', src, 'Warning deleted.', 'success')
+    exports.oxmysql:execute('DELETE FROM player_warns WHERE warnId = ?', {
+        warnId
+    }, function(rowsChanged)
+        TriggerClientEvent('qb-warnings:client:NotifyDeleted', src, rowsChanged > 0)
     end)
-end, false)
+end)
