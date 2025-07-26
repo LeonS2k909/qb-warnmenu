@@ -8,6 +8,5 @@ qb-adminmenu
 Commands
 
 ```
-/warnings - View your warnings
-/delwarning <warningId> - Delete a warning (admin only)
+/warnings - View your warnings. Admins can double click on the warning to delete warnings
 ```
